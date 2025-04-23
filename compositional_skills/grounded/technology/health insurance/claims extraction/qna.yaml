@@ -1821,6 +1821,7 @@ seed_examples:
           "prcdrCd": { "value": "90791" },
           "diagPntr": { "value": "1" },
           "billAmt": { "value": "275.00" }
+          "unitOfOccurance": { "value": "1" }
         },
         {
           "lineNo": { "value": "2" },
@@ -1890,8 +1891,7 @@ seed_examples:
           "prcdrCd": { "value": "90837" },
           "diagPntr": { "value": "1" },
           "billAmt": { "value": "215.00" },
-          "unitOfOccurance": { "value": "1" },
-          "covidBrand": { "value": "" }
+          "unitOfOccurance": { "value": "1" }
         },
         {
           "lineNo": { "value": "9" },
