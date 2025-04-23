@@ -1,0 +1,3437 @@
+version: '3'
+task_description: This skill helps extract claims information from context into a specific JSON format.
+created_by: MatthewGrigsby
+seed_examples:
+- context: |-
+    <!- image ->
+
+    3560 GrandAvenue,SuiteM ChinoHills,CA,91709
+
+    Fax:9093156326Email:
+
+    wellnessevolvedchiropractic@gmail.com
+
+    <!- image ->
+
+    ## Receipt
+
+    | Items | | | | |
+    |-|-|-|-|-|
+    | ,NPI #1659800886,Tax0n0my#111N00000X,TIN #822052570 | Invoice#5561-P01 | | | |
+    | | 1x 98941 - Chiropract manj 3-4 regions ($86.25) | $86.25 | $0.00 | $86.25 |
+    | | 1 97140 - Manual therapy 1> regions ($80.50) M54.2,M54.50,M62.838 | $80.50 | $0.00 | $80.50 |
+    | | Discount: -$126.75 | -$126.75 | $0.00 | -$126.75 |
+    | | | | Subtotal | $40.00 |
+    | | | | Total | $40.00 |
+
+    | Payments |
+    |-|
+    | MondayDecember18,2023-3:03pm Payment#1627 |
+
+    | Summary | | AsofMondayDecember18,2023at3:04pm |
+    |-|-|-|
+    | Total Invoiced | Total Paid | Balance |
+    | $40.00 | $40.00 | $0.00 |
+  question: |+
+    # Chain of Thought Analysis for Medical Claim 5561-P01
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim 5561-P01. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim 5561-P01
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    _IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3. Show your thoughts/work for each step before creating the final output JSON._
+
+  answer: |-
+    ## Step 1: Identify Claim Header Information
+    The total amount of the claim is $40.00.
+
+    ## Step 2: Identify Diagnosis Codes
+    The diagnosis codes mentioned in the content are:
+    - M54.2
+    - M54.50
+    - M62.838
+
+    ## Step 3: Count and Identify All Line Items
+    There are two distinct service line items for claim 5561-P01:
+
+    1. 98941 - Chiropractic manipulation, 3-4 regions:
+        - CPT Code: 98941
+        - Description: Chiropractic manipulation, 1 or 2 areas (list up to 4 regions)
+        - Units: Not specified
+        - Amount Billed: $86.25
+
+    2. 97140 - Manual therapy, 1 or 2 regions:
+        - CPT Code: 97140
+        - Description: Manual therapy, 1 or 2 regions
+        - Units: Not specified
+        - Amount Billed: $80.50
+
+    ## Step 4: Extract Provider Information
+    - Provider Tax ID: 822052570
+    - Provider Name: Not explicitly mentioned, but inferred as "Wellness Evolved Chiropractic" from the email address.
+    - Billing Provider's NPI: 1659800886
+    - Billing Provider's Street Address: 3560 Grand Avenue, Suite M
+    - Billing Provider's City: Chino Hills
+    - Billing Provider's State Code: CA
+    - Billing Provider's Zip Code: 91709
+    - Rendering Provider's NPI: Not explicitly mentioned
+    - Rendering Provider's Name: Not explicitly mentioned
+    - Rendering Provider's State Code: Not explicitly mentioned
+    - Rendering Provider's Zip Code: Not explicitly mentioned
+    - Ordering Provider's Name: Not explicitly mentioned
+    - Ordering Provider's NPI: Not explicitly mentioned
+    - Ordering Provider's State Code: Not explicitly mentioned
+    - Ordering Provider's Zip Code: Not explicitly mentioned
+
+    ## Step 5: Generate Final JSON Output
+
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": "40.00"
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "M54.2"
+            }
+          },
+          {
+            "diagnosisCode": {
+              "value": "M54.50"
+            }
+          },
+          {
+            "diagnosisCode": {
+              "value": "M62.838"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "1" },
+          "prcdrCd": { "value": "98941" },
+          "billAmt": { "value": "86.25" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "2" },
+          "prcdrCd": { "value": "97140" },
+          "billAmt": { "value": "80.50" },
+          "unitOfOccurance": { "value": "1" }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "822052570" },
+        "provNm": { "value": "Wellness Evolved Chiropractic" },
+        "billProvNPI": { "value": "1659800886" },
+        "billProvStAddr": { "value": "3560 Grand Avenue, Suite M" },
+        "billProvCity": { "value": "Chino Hills" },
+        "billProvStCode": { "value": "CA" },
+        "billProvZipCode": { "value": "91709" }
+      },
+      "statementClaimCode": "5561-P01"
+    }
+    ```
+- context: |-
+    From
+
+    Rachel Fish Psychology Practice 12 Inman Street #1 Cambridge, MA 02139
+
+    ## Statement for Insurance Reimbursement
+
+    <!- image ->
+
+    Statement #0181 Issued: 03/06/2024
+
+    Provider Rachel Fish NPI: #1144502295 (914) 602-2438 drrachelfish@gmail.com
+
+    Practice Tax ID: 81-1874293
+
+    | DX | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code |
+    |-|-|-|-|-|-|-|-|
+    | 1 Date | F33.1 POS | - Major Service | depressive DX | disorder, recurrent, moderate Description | Units | Fee | Paid |
+    | 02/07/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 02/14/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 02/28/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | | | | | | Total Fees | | $645.00 |
+    | | | | | | Total Paid | | $645.00 |
+  question: |+
+    # Chain of Thought Analysis for Medical Claim 0181
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim 0181. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim 0181
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3.
+
+  answer: |-
+    # Chain of Thought Analysis for Medical Claim 0181
+
+    ### Step 1: Identify Claim Header Information
+    - Total amount of the claim: $645.00
+
+    ### Step 2: Identify Diagnosis Codes
+    - Diagnosis Code: F33.1 - Major depressive disorder, recurrent, moderate
+
+    ### Step 3: Count and Identify All Line Items
+    - Total of 3 distinct service line items:
+      1. 02/07/2024, 90837, 1, $215, 60 min
+      2. 02/14/2024, 90837, 1, $215, 60 min
+      3. 02/28/2024, 90837, 1, $215, 60 min
+
+    ### Step 4: Extract Provider Information
+    - Provider Tax ID: 81-1874293
+    - Provider Name: Rachel Fish Psychology Practice
+    - Billing Provider NPI: 1144502295
+    - Billing Provider Street Address: 12 Inman Street #1
+    - Billing Provider City: Cambridge
+    - Billing Provider State Code: MA
+    - Billing Provider Zip Code: 02139
+    - Rendering Provider Name: Rachel Fish
+    - Rendering Provider NPI: 1144502295
+    - Rendering Provider State Code: MA
+    - Rendering Provider Zip Code: Not specified
+    - Ordering Provider Name: Not specified
+    - Ordering Provider NPI: Not specified
+    - Ordering Provider State Code: Not specified
+    - Ordering Provider Zip Code: Not specified
+
+    ### Step 5: Generate Final JSON Output
+
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": "645.00"
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "F33.1 - Major depressive disorder, recurrent, moderate"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "1" },
+          "fromDate": { "value": "02/07/2024" },
+          "toDate": { "value": "02/07/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "2" },
+          "fromDate": { "value": "02/14/2024" },
+          "toDate": { "value": "02/14/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "3" },
+          "fromDate": { "value": "02/28/2024" },
+          "toDate": { "value": "02/28/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "81-1874293" },
+        "provNm": { "value": "Rachel Fish Psychology Practice" },
+        "billProvNPI": { "value": "1144502295" },
+        "billProvStAddr": { "value": "12 Inman Street #1" },
+        "billProvCity": { "value": "Cambridge" },
+        "billProvStCode": { "value": "MA" },
+        "billProvZipCode": { "value": "02139" },
+        "renderProvNm": { "value": "Rachel Fish" },
+        "renderProvNPI": { "value": "1144502295" },
+        "renderProvStCd": { "value": "MA" }
+      },
+      "statementClaimCode": "0181"
+    }
+    ```
+- context: |-
+    Bili Blanket Baby NPI1134505290.TaxID:47-2193619 Arapahoe Ave,Suite100 Boulder.CO 80303 +18775932454
+    | 05/19/2023 | Equlpment Damage Waiver Insurance | 35.00 | 35 |
+    | 05/19/2023 | Delivery Delivery | 49.84 | 49.84 |
+    | 05/19/2023 | DailyPhototherapy CPT/Procedure Code Eo2o2 (lCD-10/Diagnosis Code:P59.9;Modifier:RR,rental;Place of Service: 12or H,home) | 95.00 | 95 |
+    | 05/20/2023 | Daily Phototherapy CPT/Procedure Code Eo2o2-Phototherapy Light with photometer (lCD-10/Diagnosis Code:P59.9;Modifier:RR.rental;Place of Service: 12or H,home) | 95.00 | 95 |
+    | 05/21/2023 | DailyPhototherapy CPT/ProcedureCode Eo2o2-Phototherapy Light with photometer (lCD-10/Diagnosis Code:P59.9;Modifier:RR,rental;Place of Service: 12or H,home) | 95 |
+    | 05/22/2023 | Daily Phototherapy CPT/Procedure Code Eo2o2-Phototherapy Light with photometer(lCD-10/Diagnosis Code:P59.9;Modifier:RR,rental;Place of Service: 12or H.home) | 95.00 | 95 |
+    | 05/23/2023 | Return Shipping Customer provided | 19.95 | 19.95 |
+  question: |+
+    # Chain of Thought Analysis for Medical Claim unknown_claim
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim unknown_claim. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim unknown_claim
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    _IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3. Show your thoughts/work for each step before creating the final output JSON._
+
+  answer: |-
+    ## Step 1: Identify Claim Header Information
+    The total amount of the claim is not explicitly stated in the provided content. However, we can calculate it by summing up all the 'billAmt' values.
+
+    - Total Amount: 35 (Equipment Damage Waiver Insurance) + 49.84 (Delivery) + 95 (Daily Phototherapy) x 5 (days) + 19.95 (Return Shipping) = $484.79
+
+    ## Step 2: Identify Diagnosis Codes
+    There is only one diagnosis code mentioned in the content:
+
+    - Diagnosis Code: P59.9
+
+    ## Step 3: Count and Identify All Line Items
+    There are 6 distinct service line items:
+
+    1. 05/19/2023 | Equipment Damage Waiver Insurance | 35.00 | 35
+    2. 05/19/2023 | Delivery | Modifier RR | Place of Service 12 | 49.84 | 49.84
+    3. 05/20/2023 | Daily Phototherapy | Modifier RR | Place of Service 12 | 95.00 | 95
+    4. 05/21/2023 | Daily Phototherapy | Modifier RR | Place of Service 12 | 95.00 | 95
+    5. 05/22/2023 | Daily Phototherapy | Modifier RR | Place of Service 12 | 95.00 | 95
+    6. 05/23/2023 | Return Shipping | 19.95 | 19.95
+
+    ## Step 4: Extract Provider Information
+    - Provider Tax ID: 47-2193619
+    - Provider Name: Bili Blanket Baby
+    - Billing Provider's NPI: 1134505290
+    - Billing Provider's Address: Arapahoe Ave, Suite 100, Boulder, CO 80303
+    - Billing Provider's City: Boulder
+    - Billing Provider's State Code: CO
+    - Billing Provider's Zip Code: 80303
+    - Rendering Provider's Name: Not explicitly mentioned in the provided content
+    - Rendering Provider's NPI: Not explicitly mentioned in the provided content
+    - Rendering Provider's State Code: Not explicitly mentioned in the provided content
+    - Rendering Provider's Zip Code: Not explicitly mentioned in the provided content
+    - Ordering Provider's Name: Not explicitly mentioned in the provided content
+    - Ordering Provider's NPI: Not explicitly mentioned in the provided content
+    - Ordering Provider's State Code: Not explicitly mentioned in the provided content
+    - Ordering Provider's Zip Code: Not explicitly mentioned in the provided content
+
+    ## Step 5: Generate Final JSON Output
+
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": 484.79
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "P59.9"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": 1 },
+          "fromDate": { "value": "05/19/2023" },
+          "toDate": { "value": "05/19/2023" },
+          "billAmt": { "value": 35.00 },
+          "unitOfOccurance": { "value": "1 }
+        },
+        {
+          "lineNo": { "value": 2 },
+          "fromDate": { "value": "05/19/2023" },
+          "toDate": { "value": "05/19/2023" },
+          "billAmt": { "value": 49.84 },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": 3 },
+          "fromDate": { "value": "05/20/2023" },
+          "toDate": { "value": "05/20/2023" },
+          "posCode": { "value": "12" },
+          "prcdrCd": { "value": "E0202" },
+          "mdfrCd": { "value": "RR" },
+          "diagPntr": { "value": "P59.9" },
+          "billAmt": { "value": 95.00 },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": 4 },
+          "fromDate": { "value": "05/21/2023" },
+          "toDate": { "value": "05/21/2023" },
+          "posCode": { "value": "12" },
+          "prcdrCd": { "value": "E0202" },
+          "mdfrCd": { "value": "RR" },
+          "diagPntr": { "value": "P59.9" },
+          "billAmt": { "value": 95.00 },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": 5 },
+          "fromDate": { "value": "05/22/2023" },
+          "toDate": { "value": "05/22/2023" },
+          "posCode": { "value": "12" },
+          "prcdrCd": { "value": "E0202" },
+          "mdfrCd": { "value": "RR" },
+          "diagPntr": { "value": "P59.9" },
+          "billAmt": { "value": 95.00 },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": 6 },
+          "fromDate": { "value": "05/23/2023" },
+          "toDate": { "value": "05/23/2023" },
+          "billAmt": { "value": 19.95 },
+          "unitOfOccurance": { "value": "1" }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "47-2193619" },
+        "provNm": { "value": "Bili Blanket Baby" },
+        "billProvNPI": { "value": "1134505290" },
+        "billProvStAddr": { "value": "Arapahoe Ave, Suite 100, Boulder, CO 80303" },
+        "billProvCity": { "value": "Boulder" },
+        "billProvStCode": { "value": "CO" },
+        "billProvZipCode": { "value": "80303" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+- context: |-
+    From
+
+    Rachel Fish Psychology Practice 875 Massachusetts Avenue Suite 71 Floor 7 Cambridge, MA 02139-3067
+
+    ## Statement for Insurance Reimbursement
+
+    Statement #0298
+
+    Issued: 09/25/2024
+
+    <!- image ->
+
+    | DX | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code |
+    |-|-|-|-|-|-|-|-|
+    | 1 | F33.1 - Major depressive disorder, recurrent, moderate | F33.1 - Major depressive disorder, recurrent, moderate | F33.1 - Major depressive disorder, recurrent, moderate | F33.1 - Major depressive disorder, recurrent, moderate | F33.1 - Major depressive disorder, recurrent, moderate | F33.1 - Major depressive disorder, recurrent, moderate | F33.1 - Major depressive disorder, recurrent, moderate |
+    | Date | POS | Service | DX | Description | Units | Fee | Paid |
+    | 01/03/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 01/10/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 01/17/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 01/24/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 01/31/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | | | | | | Total Fees | Total Fees | $1,075.00 |
+    | | | | | | Total Paid | Total Paid | $1,075.00 |
+  question: |+
+    # Chain of Thought Analysis for Medical Claim 0298
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim 0298. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim 0298
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3.
+
+  answer: |-
+    # Chain of Thought Analysis for Medical Claim 0298
+
+    ### Step 1: Identify Claim Header Information
+    - Total amount of the claim: $1,075.00
+
+    ### Step 2: Identify Diagnosis Codes
+    - Diagnosis Code: F33.1 - Major depressive disorder, recurrent, moderate
+
+    ### Step 3: Count and Identify All Line Items
+    - Total of 6 distinct service line items:
+
+    1. 01/03/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215
+    2. 01/10/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215
+    3. 01/17/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215
+    4. 01/24/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215
+    5. 01/31/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215
+
+    ### Step 4: Extract Provider Information
+    - Provider Tax ID: 81-1874293
+    - Provider Name: Rachel Fish Psychology Practice
+    - Billing Provider's NPI: 1144502295
+    - Billing Provider's Street Address: 875 Massachusetts Avenue Suite 71 Floor 7
+    - Billing Provider's City: Cambridge
+    - Billing Provider's State Code: MA
+    - Billing Provider's Zip Code: 02139-3067
+    - Rendering Provider's Name: Rachel Fish
+    - Rendering Provider's NPI: 1144502295
+    - Rendering Provider's State Code: Not specified
+    - Rendering Provider's Zip Code: Not specified
+    - Ordering Provider's Name: Not specified
+    - Ordering Provider's NPI: Not specified
+    - Ordering Provider's State Code: Not specified
+    - Ordering Provider's Zip Code: Not specified
+
+    ### Step 5: Generate Final JSON Output
+
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": "1075.00"
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "F33.1 - Major depressive disorder, recurrent, moderate"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "1" },
+          "fromDate": { "value": "01/03/2024" },
+          "toDate": { "value": "01/03/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "2" },
+          "fromDate": { "value": "01/10/2024" },
+          "toDate": { "value": "01/10/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "3" },
+          "fromDate": { "value": "01/17/2024" },
+          "toDate": { "value": "01/17/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "4" },
+          "fromDate": { "value": "01/24/2024" },
+          "toDate": { "value": "01/24/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "5" },
+          "fromDate": { "value": "01/31/2024" },
+          "toDate": { "value": "01/31/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "81-1874293" },
+        "provNm": { "value": "Rachel Fish Psychology Practice" },
+        "billProvNPI": { "value": "1144502295" },
+        "billProvStAddr": { "value": "875 Massachusetts Avenue Suite 71 Floor 7" },
+        "billProvCity": { "value": "Cambridge" },
+        "billProvStCode": { "value": "MA" },
+        "billProvZipCode": { "value": "02139-3067" },
+        "renderProvNm": { "value": "Rachel Fish" },
+        "renderProvNPI": { "value": "1144502295" }
+      },
+      "statementClaimCode": "0298"
+    }
+    ```
+- context: |-
+    From
+
+    Rachel Fish Psychology Practice 875 Massachusetts Avenue Suite 71 Floor 7 Cambridge, MA 02139-3067
+
+    ## Statement for Insurance Reimbursement
+
+    <!- image ->
+
+    Statement #0299
+
+    Issued: 09/25/2024
+
+    Provider Rachel Fish NPI: #1144502295 (914) 602-2438 drrachelfish@gmail.com
+
+    Practice Tax ID: 81-1874293
+
+    | DX | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code |
+    |-|-|-|-|-|-|-|-|
+    | 1 F33.1 - Major depressive disorder, recurrent, moderate | 1 F33.1 - Major depressive disorder, recurrent, moderate | 1 F33.1 - Major depressive disorder, recurrent, moderate | 1 F33.1 - Major depressive disorder, recurrent, moderate | 1 F33.1 - Major depressive disorder, recurrent, moderate | 1 F33.1 - Major depressive disorder, recurrent, moderate | 1 F33.1 - Major depressive disorder, recurrent, moderate | 1 F33.1 - Major depressive disorder, recurrent, moderate |
+    | Date | POS | Service | DX | Description | Units | Fee | Paid |
+    | 03/06/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 03/13/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 03/20/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 03/27/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | | | | | | Total Fees | Total Fees | $860.00 |
+    | | | | | | Total Paid | Total Paid | $860.00 |
+  question: |+
+    # Chain of Thought Analysis for Medical Claim 0299
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim 0299. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim 0299
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3.
+
+  answer: |-
+    # Chain of Thought Analysis for Medical Claim 0299
+
+    ### Step 1: Identify Claim Header Information
+    - The total amount of the claim is $860.00.
+
+    ### Step 2: Identify Diagnosis Codes
+    - The diagnosis code mentioned in the content is: F33.1 - Major depressive disorder, recurrent, moderate.
+
+    ### Step 3: Count and Identify All Line Items
+    - There are 5 distinct service line items for claim 0299:
+      1. 03/06/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215
+      2. 03/13/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215
+      3. 03/20/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215
+      4. 03/27/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215
+
+    ### Step 4: Extract Provider Information
+    - Provider Tax ID: 81-1874293
+    - Provider Name: Rachel Fish Psychology Practice
+    - Billing Provider's NPI: 1144502295
+    - Billing Provider's Street Address: 875 Massachusetts Avenue Suite 71 Floor 7
+    - Billing Provider's City: Cambridge
+    - Billing Provider's State Code: MA
+    - Billing Provider's Zip Code: 02139-3067
+    - Rendering Provider's Name: Rachel Fish
+    - Rendering Provider's NPI: 1144502295
+    - Rendering Provider's State Code: NY (assuming based on NPI data, as state isn't explicitly mentioned)
+    - Rendering Provider's Zip Code: Not provided
+    - Ordering Provider's Name: Not explicitly mentioned
+    - Ordering Provider's NPI: Not provided
+    - Ordering Provider's State Code: Not provided
+    - Ordering Provider's Zip Code: Not provided
+
+    ### Step 5: Generate Final JSON Output
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": 860.00
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "F33.1 - Major depressive disorder, recurrent, moderate"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": 1 },
+          "fromDate": { "value": "03/06/2024" },
+          "toDate": { "value": "03/06/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": 215.00 },
+          "unitOfOccurance": { "value": 1 }
+        },
+        {
+          "lineNo": { "value": 2 },
+          "fromDate": { "value": "03/13/2024" },
+          "toDate": { "value": "03/13/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": 215.00 },
+          "unitOfOccurance": { "value": 1 }
+        },
+        {
+          "lineNo": { "value": 3 },
+          "fromDate": { "value": "03/20/2024" },
+          "toDate": { "value": "03/20/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": 215.00 },
+          "unitOfOccurance": { "value": 1 }
+        },
+        {
+          "lineNo": { "value": 4 },
+          "fromDate": { "value": "03/27/2024" },
+          "toDate": { "value": "03/27/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": 215.00 },
+          "unitOfOccurance": { "value": 1 }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "81-1874293" },
+        "provNm": { "value": "Rachel Fish Psychology Practice" },
+        "billProvNPI": { "value": "1144502295" },
+        "billProvStAddr": { "value": "875 Massachusetts Avenue Suite 71 Floor 7" },
+        "billProvCity": { "value": "Cambridge" },
+        "billProvStCode": { "value": "MA" },
+        "billProvZipCode": { "value": "02139-3067" },
+        "renderProvNm": { "value": "Rachel Fish" },
+        "renderProvNPI": { "value": "1144502295" },
+        "renderProvStCd": { "value": "NY" }
+      },
+      "statementClaimCode": "0299"
+    }
+    ```
+- context: |-
+    From
+
+    Rachel Fish Psychology Practice 875 Massachusetts Avenue Suite 71 Floor 7 Cambridge, MA 02139-3067
+
+    ## Statement for Insurance Reimbursement
+
+    <!- image ->
+
+    Statement #0283
+
+    Issued: 08/06/2024
+
+    Provider Rachel Fish NPI: #1144502295 (914) 602-2438 drrachelfish@gmail.com
+
+    Practice Tax ID: 81-1874293
+
+    DX
+
+    Diagnosis Code
+
+    1
+
+    F33.1 - Major depressive disorder, recurrent, moderate
+
+    | Date | POS | Service | DX | Description | Units | Fee | Paid |
+    |-|-|-|-|-|-|-|-|
+    | 06/05/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 06/12/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 06/19/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 07/10/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 07/24/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 07/31/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | | | | | | Total Fees | Total Fees | $1,290.00 |
+    | | | | | | Total Paid | Total Paid | $1,290.00 |
+  question: |+
+    # Chain of Thought Analysis for Medical Claim 0283
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim 0283. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim 0283
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3.
+
+  answer: |-
+    # Chain of Thought Analysis for Medical Claim 0283
+
+    ### Step 1: Identify Claim Header Information
+    - Total Amount: $1,290.00
+
+    ### Step 2: Identify Diagnosis Codes
+    - Diagnosis Code: F33.1 - Major depressive disorder, recurrent, moderate
+
+    ### Step 3: Count and Identify All Line Items
+    - Line Items:
+      1. 06/05/2024, 11, 90837, 1, Psychotherapy, 60 min, 1, $215, $215
+      2. 06/12/2024, 11, 90837, 1, Psychotherapy, 60 min, 1, $215, $215
+      3. 06/19/2024, 11, 90837, 1, Psychotherapy, 60 min, 1, $215, $215
+      4. 07/10/2024, 11, 90837, 1, Psychotherapy, 60 min, 1, $215, $215
+      5. 07/24/2024, 11, 90837, 1, Psychotherapy, 60 min, 1, $215, $215
+      6. 07/31/2024, 11, 90837, 1, Psychotherapy, 60 min, 1, $215, $215
+
+    ### Step 4: Extract Provider Information
+    - Provider Tax ID: 81-1874293
+    - Provider Name: Rachel Fish Psychology Practice
+    - Billing Provider NPI: 1144502295
+    - Billing Provider Street Address: 875 Massachusetts Avenue Suite 71 Floor 7
+    - Billing Provider City: Cambridge
+    - Billing Provider State Code: MA
+    - Billing Provider Zip Code: 02139-3067
+    - Rendering Provider Name: Rachel Fish
+    - Rendering Provider NPI: 1144502295
+    - Rendering Provider State Code: Not specified
+    - Rendering Provider Zip Code: Not specified
+    - Ordering Provider Name: Not specified
+    - Ordering Provider NPI: Not specified
+    - Ordering Provider State Code: Not specified
+    - Ordering Provider Zip Code: Not specified
+
+    ### Step 5: Generate Final JSON Output
+
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": "1290.00"
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "F33.1 - Major depressive disorder, recurrent, moderate"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "1" },
+          "fromDate": { "value": "06/05/2024" },
+          "toDate": { "value": "06/05/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "2" },
+          "fromDate": { "value": "06/12/2024" },
+          "toDate": { "value": "06/12/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "3" },
+          "fromDate": { "value": "06/19/2024" },
+          "toDate": { "value": "06/19/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "4" },
+          "fromDate": { "value": "07/10/2024" },
+          "toDate": { "value": "07/10/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "5" },
+          "fromDate": { "value": "07/24/2024" },
+          "toDate": { "value": "07/24/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "6" },
+          "fromDate": { "value": "07/31/2024" },
+          "toDate": { "value": "07/31/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "81-1874293" },
+        "provNm": { "value": "Rachel Fish Psychology Practice" },
+        "billProvNPI": { "value": "1144502295" },
+        "billProvStAddr": { "value": "875 Massachusetts Avenue Suite 71 Floor 7" },
+        "billProvCity": { "value": "Cambridge" },
+        "billProvStCode": { "value": "MA" },
+        "billProvZipCode": { "value": "02139-3067" },
+        "renderProvNm": { "value": "Rachel Fish" },
+        "renderProvNPI": { "value": "1144502295" }
+      },
+      "statementClaimCode": "0283"
+    }
+    ```
+- context: |-
+    From
+
+    Rachel Fish Psychology Practice 875 Massachusetts Avenue Suite 71 Floor 7 Cambridge, MA 02139-3067
+
+    ## Statement for Insurance Reimbursement
+
+    <!- image ->
+
+    Statement #0295
+
+    Issued: 09/10/2024
+
+    Provider Rachel Fish NPI: #1144502295 (914) 602-2438 drrachelfish@gmail.com
+
+    Practice Tax ID: 81-1874293
+
+    | DX | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code | Diagnosis Code |
+    |-|-|-|-|-|-|-|-|
+    | 1 Date | F33.1 POS | - Major Service | depressive DX | disorder, recurrent, moderate Description | Units | Fee | Paid |
+    | 08/07/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 08/12/2024 | 11 | 90837 - 95 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | 08/28/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | | | | | | Total Fees | Total Fees | $645.00 |
+    | | | | | | Total Paid | Total Paid | $645.00 |
+  question: |+
+    # Chain of Thought Analysis for Medical Claim 0295
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim 0295. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim 0295
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3.
+
+  answer: |-
+    # Chain of Thought Analysis for Medical Claim 0295
+
+    ### Step 1: Identify Claim Header Information
+    - Total amount of the claim: $645.00
+
+    ### Step 2: Identify Diagnosis Codes
+    - Diagnosis Code: F33.1 - Major depressive disorder, recurrent, moderate
+
+    ### Step 3: Count and Identify All Line Items
+    - Total distinct service line items: 3
+    - Line items in sequence:
+      1. 08/07/2024, 90837, 1, Psychotherapy, 60 min, 1, $215, $215
+      2. 08/12/2024, 90837 - 95, 1, Psychotherapy, 60 min, 1, $215, $215
+      3. 08/28/2024, 90837, 1, Psychotherapy, 60 min, 1, $215, $215
+
+    ### Step 4: Extract Provider Information
+    - Provider Tax ID: 81-1874293
+    - Provider Name: Rachel Fish Psychology Practice
+    - Billing Provider NPI: 1144502295
+    - Billing Provider Street Address: 875 Massachusetts Avenue Suite 71 Floor 7
+    - Billing Provider City: Cambridge
+    - Billing Provider State Code: MA
+    - Billing Provider Zip Code: 02139-3067
+    - Rendering Provider Name: Rachel Fish
+    - Rendering Provider NPI: 1144502295
+    - Rendering Provider State Code: Not specified
+    - Rendering Provider Zip Code: Not specified
+    - Ordering Provider Name: Not specified
+    - Ordering Provider NPI: Not specified
+    - Ordering Provider State Code: Not specified
+    - Ordering Provider Zip Code: Not specified
+
+    ### Step 5: Generate Final JSON Output
+
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": 645.00
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "F33.1 - Major depressive disorder, recurrent, moderate"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": 1 },
+          "fromDate": { "value": "08/07/2024" },
+          "toDate": { "value": "08/07/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": 215.00 },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": 2 },
+          "fromDate": { "value": "08/12/2024" },
+          "toDate": { "value": "08/12/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837 - 95" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": 215.00 },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": 3 },
+          "fromDate": { "value": "08/28/2024" },
+          "toDate": { "value": "08/28/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": 215.00 },
+          "unitOfOccurance": { "value": "1" }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "81-1874293" },
+        "provNm": { "value": "Rachel Fish Psychology Practice" },
+        "billProvNPI": { "value": "1144502295" },
+        "billProvStAddr": { "value": "875 Massachusetts Avenue Suite 71 Floor 7" },
+        "billProvCity": { "value": "Cambridge" },
+        "billProvStCode": { "value": "MA" },
+        "billProvZipCode": { "value": "02139-3067" },
+        "renderProvNm": { "value": "Rachel Fish" },
+        "renderProvNPI": { "value": "1144502295" }
+      },
+      "statementClaimCode": "0295"
+    }
+    ```
+- context: |-
+    Statement #0150
+    Issued: 01/08/2024
+    Provider Rachel Fish NPI: #1144502295 (914) 602-2438
+    Practice Tax ID: 81-1874293
+    ld of Massachusetts (MABLS)
+    F33.1 - Major depressive disorder, recurrent, moderate
+    | Date | POS | Service | DX  | Units | Fee |
+    | 10/04/2023 | 11 | 90791 | 1 | 1 | $275 |
+    | 10/11/2023 | 11 | 90837 | 1 | 1 | $215 |
+    | 10/18/2023 | 11 | 90837 | 1 | 1 | $215 |
+    | 10/25/2023 | 11 | 90837 | 1 | 1 | $215 |
+    | 11/01/2023 | 11 | 90837 | 1 | 1 | $215 |
+    | 11/08/2023 | 11 | 90837 | 1 | 1 | $215 |
+    | 11/15/2023 | 11 | 90837 | 1 | 1 | $215 |
+    | 11/20/2023 | 11 | 90837 | 1 | 1 | $215 |
+    | 11/29/2023 | 11 | 90837 | 1 | 1 | $215 |
+    | 12/06/2023 | 11 | 90837 | 1 | 1 | $215 |
+    | Total Fees | $2,210.00 |
+  question: |+
+    # Chain of Thought Analysis for Medical Claim 0150
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim 0150. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim 0150
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3.
+
+  answer: |-
+    # Chain of Thought Analysis for Medical Claim 0150
+
+    ### Step 1: Identify Claim Header Information
+    - Total amount of the claim: $2,210.00
+
+    ### Step 2: Identify Diagnosis Codes
+    - Diagnosis Code: F33.1 - Major depressive disorder, recurrent, moderate
+
+    ### Step 3: Count and Identify All Line Items
+    - Total of 10 distinct service line items:
+    1. 10/04/2023, 90791, 1, $275, Psychiatric Diagnostic Evaluation
+    2. 10/11/2023, 90837, 1, $215, Psychotherapy
+    3. 10/18/2023, 90837, 1, $215, Psychotherapy
+    4. 10/25/2023, 90837, 1, $215, Psychotherapy
+    5. 11/01/2023, 90837, 1, $215, Psychotherapy
+    6. 11/08/2023, 90837, 1, $215, Psychotherapy
+    7. 11/15/2023, 90837, 1, $215, Psychotherapy
+    8. 11/20/2023, 90837, 1, $215, Psychotherapy
+    9. 11/29/2023, 90837, 1, $215, Psychotherapy
+    10. 12/06/2023, 90837, 1, $215, Psychotherapy
+
+    ### Step 4: Extract Provider Information
+    - Provider Tax ID: 81-1874293
+    - Provider Name: Rachel Fish Psychology Practice
+    - Billing Provider's NPI: 1144502295
+    - Billing Provider's Street Address: 12 Inman Street #1
+    - Billing Provider's City: Cambridge
+    - Billing Provider's State Code: MA
+    - Billing Provider's Zip Code: 02139
+    - Rendering Provider's Name: Rachel Fish
+    - Rendering Provider's NPI: 1144502295
+    - Rendering Provider's State Code: Not specified
+    - Rendering Provider's Zip Code: Not specified
+    - Ordering Provider's Name: Not specified
+    - Ordering Provider's NPI: Not specified
+    - Ordering Provider's State Code: Not specified
+    - Ordering Provider's Zip Code: Not specified
+
+    ### Step 5: Generate Final JSON Output
+
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": "2210.00"
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "F33.1"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "1" },
+          "fromDate": { "value": "10/04/2023" },
+          "toDate": { "value": "10/04/2023" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90791" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "275.00" }
+        },
+        {
+          "lineNo": { "value": "2" },
+          "fromDate": { "value": "10/11/2023" },
+          "toDate": { "value": "10/11/2023" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "3" },
+          "fromDate": { "value": "10/18/2023" },
+          "toDate": { "value": "10/18/2023" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "4" },
+          "fromDate": { "value": "10/25/2023" },
+          "toDate": { "value": "10/25/2023" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "5" },
+          "fromDate": { "value": "11/01/2023" },
+          "toDate": { "value": "11/01/2023" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "6" },
+          "fromDate": { "value": "11/08/2023" },
+          "toDate": { "value": "11/08/2023" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "7" },
+          "fromDate": { "value": "11/15/2023" },
+          "toDate": { "value": "11/15/2023" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "8" },
+          "fromDate": { "value": "11/20/2023" },
+          "toDate": { "value": "11/20/2023" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" },
+          "covidBrand": { "value": "" }
+        },
+        {
+          "lineNo": { "value": "9" },
+          "fromDate": { "value": "11/29/2023" },
+          "toDate": { "value": "11/29/2023" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "10" },
+          "fromDate": { "value": "12/06/2023" },
+          "toDate": { "value": "12/06/2023" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "81-1874293" },
+        "provNm": { "value": "Rachel Fish Psychology Practice" },
+        "billProvNPI": { "value": "1144502295" },
+        "billProvStAddr": { "value": "12 Inman Street #1" },
+        "billProvCity": { "value": "Cambridge" },
+        "billProvStCode": { "value": "MA" },
+        "billProvZipCode": { "value": "02139" },
+        "renderProvNm": { "value": "Rachel Fish" },
+        "renderProvNPI": { "value": "1144502295" }
+      },
+      "statementClaimCode": "0150"
+    }
+    ```
+- context: |-
+    From
+
+    Rachel Fish Psychology Practice 12 Inman Street #1 Cambridge, MA 02139
+
+    ## Statement for Insurance Reimbursement
+
+    <!- image ->
+
+    Client
+
+    <!- image ->
+
+    ## Insured
+
+    Statement #0224 Issued: 05/08/2024
+
+    Provider Rachel Fish NPI: #1144502295 (914) 602-2438 drrachelfish@gmail.com
+
+    Practice Tax ID: 81-1874293
+
+    DX
+
+    Diagnosis Code
+
+    1
+
+    F33.1 - Major depressive disorder, recurrent, moderate
+
+    | Date | POS | Service | DX | Description | Units | Fee | Paid |
+    |-|-|-|-|-|-|-|-|
+    | 04/24/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | | | | | | Total Fees | | $215.00 |
+    | | | | | | Total Paid | | $215.00 |
+  question: |+
+    # Chain of Thought Analysis for Medical Claim 0243
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim 0243. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim 0243
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3.
+
+  answer: |-
+    # Chain of Thought Analysis for Medical Claim 0243
+
+    ### Step 1: Identify Claim Header Information
+    - The total amount of the claim is $1,075.00.
+
+    ### Step 2: Identify Diagnosis Codes
+    - The diagnosis code mentioned is F33.1 - Major depressive disorder, recurrent, moderate.
+
+    ### Step 3: Count and Identify All Line Items
+    - There are 6 distinct service line items for claim 0243:
+      1. 05/01/2024, 90837, 1, $215, 60 min
+      2. 05/08/2024, 90837, 1, $215, 60 min
+      3. 05/15/2024, 90837, 1, $215, 60 min
+      4. 05/22/2024, 90837, 1, $215, 60 min
+      5. 05/29/2024, 90837, 1, $215, 60 min
+
+    ### Step 4: Extract Provider Information
+    - Provider Tax ID: 81-1874293
+    - Provider Name: Rachel Fish Psychology Practice
+    - Billing Provider's NPI: 1144502295
+    - Billing Provider's Street Address: 12 Inman Street #1
+    - Billing Provider's City: Cambridge
+    - Billing Provider's State Code: MA
+    - Billing Provider's Zip Code: 02139
+
+    ### Step 5: Generate Final JSON Output
+
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": "1075.00"
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "F33.1 - Major depressive disorder, recurrent, moderate"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "1" },
+          "fromDate": { "value": "05/01/2024" },
+          "toDate": { "value": "05/01/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "2" },
+          "fromDate": { "value": "05/08/2024" },
+          "toDate": { "value": "05/08/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "3" },
+          "fromDate": { "value": "05/15/2024" },
+          "toDate": { "value": "05/15/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "4" },
+          "fromDate": { "value": "05/22/2024" },
+          "toDate": { "value": "05/22/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "5" },
+          "fromDate": { "value": "05/29/2024" },
+          "toDate": { "value": "05/29/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "81-1874293" },
+        "provNm": { "value": "Rachel Fish Psychology Practice" },
+        "billProvNPI": { "value": "1144502295" },
+        "billProvStAddr": { "value": "12 Inman Street #1" },
+        "billProvCity": { "value": "Cambridge" },
+        "billProvStCode": { "value": "MA" },
+        "billProvZipCode": { "value": "02139" },
+        "renderProvNm": { "value": "Rachel Fish" },
+        "renderProvNPI": { "value": "1144502295" },
+        "renderProvStCd": { "value": "MA" },
+        "renderProvZipCd": { "value": "02139" },
+      },
+      "statementClaimCode": "0243"
+    }
+    ```
+- context: |-
+    ## TheDialectical and Cognitive Behavior Therapy Center,LLC 15PowersCourt Westport,Connecticut 06880 203.454.3070
+
+    August16,2024
+
+    ## For Proiessional Services Delivered By: Jenna Kiska, LCS W
+
+    Individual Session((90834) August15,2024
+
+    $
+
+    300.00
+
+    NPI#1487927851 PractitionerEIN:87-0791464, DiagnosisCode:F41.1
+  question: |+
+    # Chain of Thought Analysis for Medical Claim 90834
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim 90834. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim 90834
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3.
+
+  answer: |-
+    ### Step 1: Identify Claim Header Information
+    - The total amount of the claim is $300.00.
+
+    ### Step 2: Identify Diagnosis Codes
+    - The diagnosis code mentioned in the content is: F41.1
+
+    ### Step 3: Count and Identify All Line Items
+    - There is only one service line item for claim 90834:
+      1. Date of Service: August 15, 2024
+      2. Procedure/CPT Code: Not explicitly mentioned (likely implied as 'Individual Session')
+      3. Units: Not explicitly mentioned (likely implied as 1)
+      4. Amount: $300.00
+
+    ### Step 4: Extract Provider Information
+    - Billing Provider:
+      - Tax ID: 87-0791464
+      - Name: TheDialectical and Cognitive Behavior Therapy Center,LLC
+      - NPI Number: 1487927851
+      - Street Address: 15 Powers Court
+      - City: Westport
+      - State Code: CT
+      - Zip Code: 06880
+
+    - Rendering Provider (same as billing provider in this case):
+      - Name: TheDialectical and Cognitive Behavior Therapy Center,LLC
+      - NPI Number: 1487927851
+      - State Code: CT
+      - Zip Code: 06880
+
+    - Ordering Provider (not explicitly mentioned, assumed to be the same as rendering provider):
+      - Name: TheDialectical and Cognitive Behavior Therapy Center,LLC
+      - NPI Number: 1487927851
+      - State Code: CT
+      - Zip Code: 06880
+
+    ### Step 5: Generate Final JSON Output
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": "300.00"
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "F41.1"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "1" },
+          "fromDate": { "value": "08/15/2024" },
+          "toDate": { "value": "08/15/2024" },
+          "prcdrCd": { "value": "90834" },
+          "billAmt": { "value": "300.00" },
+          "unitOfOccurance": { "value": "1" }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "87-0791464" },
+        "provNm": { "value": "TheDialectical and Cognitive Behavior Therapy Center,LLC" },
+        "billProvNPI": { "value": "1487927851" },
+        "billProvStAddr": { "value": "15 Powers Court" },
+        "billProvCity": { "value": "Westport" },
+        "billProvStCode": { "value": "CT" },
+        "billProvZipCode": { "value": "06880" },
+        "renderProvNm": { "value": "TheDialectical and Cognitive Behavior Therapy Center,LLC" },
+        "renderProvNPI": { "value": "1487927851" },
+        "renderProvStCd": { "value": "CT" },
+        "renderProvZipCd": { "value": "06880" },
+        "orderingProvNm": { "value": "TheDialectical and Cognitive Behavior Therapy Center,LLC" },
+        "orderingProvNPI": { "value": "1487927851" },
+        "orderingProvStCode": { "value": "CT" },
+        "orderingProvZipCode": { "value": "06880" }
+      },
+      "statementClaimCode": "90834"
+    }
+    ```
+- context: |-
+    Align Therapeutics,LLC 1110DurhamRd. Madison,CT06443
+    203-751-7182
+    Patient Name:
+    Date of Service:
+    2/5/25
+    Date of Birth:
+    City/State/ ZIP
+    Phone #:
+    Reason for Visit:
+    Cervicalgia; Pain in Left Arm; Pain in Right Arm; Spinal Stenosis Cervicothoracic region
+    ReferringPhysician:
+    N/A
+    Phone#:
+    ICD-10/Diagnosis Codes:
+    ## M54.2; M79.602; M79.601; M48.03
+    PROCEDURES
+    CODE
+    Modifier
+    UNITS
+    FEE
+    TOTAL
+    NOTES:
+    Occupational Therapy
+    97166
+    GO
+    $
+    $
+    (ModerateComplexity)
+    Occupational Therapy (High
+    97167
+    GO
+    $
+    $
+    Complexity)
+    Manual Therapy /Myofascial
+    Release
+    97140-59
+    GO
+    5
+    $38.00
+    $190.00
+    Therapeutic Activities
+    97530
+    GO
+    Neuromuscular Re-education
+    97112
+    GO
+    Therapeutic Exercise
+    97110
+    GO
+    $35.00
+    $35.00
+    PackageDiscount
+    $15.75
+    TOTAL:
+    $209.00
+    Place of
+    Officecode #11
+    Service:#
+    License #
+    001575
+    Tax ID/EIN:
+    #81-1943613
+    NPI #
+    #1407251499
+    **PATIENTPAIDBALANCEINFULL**
+    **Align Therapeutics, LLC is NOT an insurance provider for this claim.** **Please providepayment directly to patient.**
+  question: |+
+    # Chain of Thought Analysis for Medical Claim unknown_claim
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim unknown_claim. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim unknown_claim
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    _IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3. Show your thoughts/work for each step before creating the final output JSON._
+
+  answer: |-
+    ## Step 1: Identify Claim Header Information
+    - The total amount of the claim is $209.00.
+
+    ## Step 2: Identify Diagnosis Codes
+    - The diagnosis codes mentioned in the content are:
+      - M54.2
+      - M79.602
+      - M79.601
+      - M48.03
+
+    ## Step 3: Count and Identify All Line Items
+    - There are 7 distinct service line items:
+
+    1. Occupational Therapy (Moderate Complexity)
+       - CPT Code: 97166
+       - Modifier: GO
+       - Units: Not specified
+       - Fee: $
+       - Total: $
+
+    2. Occupational Therapy (High Complexity)
+       - CPT Code: 97167
+       - Modifier: GO
+       - Units: Not specified
+       - Fee: $
+       - Total: $
+
+    3. Manual Therapy / Myofascial Release
+       - CPT Code: 97140-59
+       - Modifier: GO
+       - Units: 5
+       - Fee: $38.00
+       - Total: $190.00
+
+    4. Therapeutic Activities
+       - CPT Code: 97530
+       - Modifier: GO
+       - Units: Not specified
+       - Fee: $
+       - Total: $
+
+    5. Neuromuscular Re-education
+       - CPT Code: 97112
+       - Modifier: GO
+       - Units: Not specified
+       - Fee: $35.00
+       - Total: $35.00
+
+    6. Therapeutic Exercise
+       - CPT Code: 97110
+       - Modifier: GO
+       - Units: Not specified
+       - Fee: $35.00
+       - Total: $35.00
+
+    7. Package Discount
+       - CPT Code: Not applicable
+       - Modifier: Not applicable
+       - Units: Not applicable
+       - Fee: $15.75
+       - Total: $15.75
+
+    ## Step 4: Extract Provider Information
+    - Provider's tax ID: 81-1943613
+    - Provider's name: Align Therapeutics, LLC
+    - Billing provider's NPI number: 1407251499
+    - Billing provider's street address: 1110 Durham Rd.
+    - Billing provider's city: Madison
+    - Billing provider's state code: CT
+    - Billing provider's zip code: 06443
+    - Rendering provider's name (same as billing): Align Therapeutics, LLC
+    - Rendering provider's NPI number: 1407251499
+    - Rendering provider's state code: CT
+    - Rendering provider's zip code: 06443
+    - Ordering provider's name: N/A
+    - Ordering provider's NPI number: N/A
+    - Ordering provider's state code: N/A
+    - Ordering provider's zip code: N/A
+
+    ## Step 5: Generate Final JSON Output
+
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": 209.00
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "M54.2"
+            }
+          },
+          {
+            "diagnosisCode": {
+              "value": "M79.602"
+            }
+          },
+          {
+            "diagnosisCode": {
+              "value": "M79.601"
+            }
+          },
+          {
+            "diagnosisCode": {
+              "value": "M48.03"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": 1 },
+          "fromDate": { "value": "2025-02-05" },
+          "toDate": { "value": "2025-02-05" },
+          "prcdrCd": { "value": "97166" },
+          "mdfrCd": { "value": "GO" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": 2 },
+          "fromDate": { "value": "2025-02-05" },
+          "toDate": { "value": "2025-02-05" },
+          "prcdrCd": { "value": "97167" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": 3 },
+          "fromDate": { "value": "2025-02-05" },
+          "toDate": { "value": "2025-02-05" },
+          "prcdrCd": { "value": "97140-59" },
+          "mdfrCd": { "value": "GO" },
+          "billAmt": { "value": 190.00 },
+          "unitOfOccurance": { "value": "5" }
+        },
+        {
+          "lineNo": { "value": 4 },
+          "fromDate": { "value": "2025-02-05" },
+          "toDate": { "value": "2025-02-05" },
+          "prcdrCd": { "value": "97530" },
+          "mdfrCd": { "value": "GO" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": 5 },
+          "fromDate": { "value": "2025-02-05" },
+          "toDate": { "value": "2025-02-05" },
+          "prcdrCd": { "value": "97112" },
+          "mdfrCd": { "value": "GO" },
+          "billAmt": { "value": 35.00 },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": 6 },
+          "fromDate": { "value": "2025-02-05" },
+          "toDate": { "value": "2025-02-05" },
+          "prcdrCd": { "value": "97110" },
+          "mdfrCd": { "value": "GO" },
+          "billAmt": { "value": 35.00 },
+          "unitOfOccurance": { "value": "1" }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "81-1943613" },
+        "provNm": { "value": "Align Therapeutics, LLC" },
+        "billProvNPI": { "value": "1407251499" },
+        "billProvStAddr": { "value": "1110 Durham Rd." },
+        "billProvCity": { "value": "Madison" },
+        "billProvStCode": { "value": "CT" },
+        "billProvZipCode": { "value": "06443" },
+        "renderProvNm": { "value": "Align Therapeutics, LLC" },
+        "renderProvNPI": { "value": "1407251499" },
+        "renderProvStCd": { "value": "CT" },
+        "renderProvZipCd": { "value": "06443" }
+      },
+      "statementClaimCode": "unknown_claim"
+    }
+    ```
+- context: |-
+    From
+
+    Rachel Fish Psychology Practice 12 Inman Street #1 Cambridge, MA 02139
+
+    ## Statement for Insurance Reimbursement
+
+    <!- image ->
+
+    Client
+
+    <!- image ->
+
+    ## Insured
+
+    Statement #0224 Issued: 05/08/2024
+
+    Provider Rachel Fish NPI: #1144502295 (914) 602-2438 drrachelfish@gmail.com
+
+    Practice Tax ID: 81-1874293
+
+    DX
+
+    Diagnosis Code
+
+    1
+
+    F33.1 - Major depressive disorder, recurrent, moderate
+
+    | Date | POS | Service | DX | Description | Units | Fee | Paid |
+    |-|-|-|-|-|-|-|-|
+    | 04/24/2024 | 11 | 90837 | 1 | Psychotherapy, 60 min | 1 | $215 | $215 |
+    | | | | | | Total Fees | | $215.00 |
+    | | | | | | Total Paid | | $215.00 |
+  question: |+
+    # Chain of Thought Analysis for Medical Claim 0224
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim 0224. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim 0224
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3.
+
+  answer: |-
+    # Chain of Thought Analysis for Medical Claim 0224
+
+    ### Step 1: Identify Claim Header Information
+    - The total amount of the claim is $215.00.
+
+    ### Step 2: Identify Diagnosis Codes
+    - The diagnosis code mentioned is F33.1 - Major depressive disorder, recurrent, moderate.
+
+    ### Step 3: Count and Identify All Line Items
+    - There is one service line item pertaining to claim 0224:
+      1. Date of service: 04/24/2024
+      2. Procedure/CPT code: 90837
+      3. Units: 1
+      4. Description: Psychotherapy, 60 min
+      5. Fee: $215.00
+      6. Paid: $215.00
+
+    ### Step 4: Extract Provider Information
+    - Provider Tax ID: 81-1874293
+    - Provider Name: Rachel Fish Psychology Practice
+    - Billing Provider's NPI number: 1144502295
+    - Billing Provider's Street Address: 12 Inman Street #1
+    - Billing Provider's City: Cambridge
+    - Billing Provider's State Code: MA
+    - Billing Provider's Zip Code: 02139
+    - Rendering Provider's Name (same as billing): Rachel Fish
+    - Rendering Provider's NPI number: 1144502295
+    - Rendering Provider's State Code: MA
+    - Rendering Provider's Zip Code: 02139
+    - Ordering Provider's Name (not explicitly mentioned, assumed to be Rachel Fish)
+    - Ordering Provider's NPI number: 1144502295
+    - Ordering Provider's State Code: MA
+    - Ordering Provider's Zip Code: 02139
+
+    ### Step 5: Generate Final JSON Output
+
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": "215.00"
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "F33.1 - Major depressive disorder, recurrent, moderate"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "1" },
+          "fromDate": { "value": "04/24/2024" },
+          "toDate": { "value": "04/24/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "215.00" },
+          "unitOfOccurance": { "value": "1" }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "81-1874293" },
+        "provNm": { "value": "Rachel Fish Psychology Practice" },
+        "billProvNPI": { "value": "1144502295" },
+        "billProvStAddr": { "value": "12 Inman Street #1" },
+        "billProvCity": { "value": "Cambridge" },
+        "billProvStCode": { "value": "MA" },
+        "billProvZipCode": { "value": "02139" },
+        "renderProvNm": { "value": "Rachel Fish" },
+        "renderProvNPI": { "value": "1144502295" },
+        "renderProvStCd": { "value": "MA" },
+        "renderProvZipCd": { "value": "02139" },
+        "orderingProvNm": { "value": "Rachel Fish" },
+        "orderingProvNPI": { "value": "1144502295" },
+        "orderingProvStCode": { "value": "MA" },
+        "orderingProvZipCode": { "value": "02139" }
+      },
+      "statementClaimCode": "0224"
+    }
+    ```
+- context: |-
+    GEO Chiropractic Clinic 2646 Mission Street San Marino,CA 91108-1638 626-441-2264 ID#:95-3981045 EEugene OrlowskyD.C.NPI#:1477639169 Wednesday May 31,2023
+
+    Itemized Statement:
+
+    05/30/2023
+
+    05/31/2023
+
+    Onset date
+
+    ：05/16/2023
+
+    Insurance Carrier (primary) Blue Cross Anthem P.O.B0x 60007 Los Angeles CA 90060
+
+    ## Current Diagnosis
+
+    M54.12
+
+    Cervical Radiculopathy
+
+    M50.320
+
+    Other cervical disc degeneration，r mid-cervical region
+
+    S43.42lA Sprain of right rotator cuff capsule,initial encounter
+
+    | Date | Description | Amount |
+    |-|-|-|
+    | 05/30/23 | 98941 Chiropractic Manipulation | 80.00 |
+    | 05/31/23 | 98941 ChiropracticManipulation | 80.00 |
+    | 05/31/23 | E0943 Pillowise | $$$$ 140.00 |
+    | 05/31/23 | Credit card payment applied to unbilled services | 300.00 |
+
+    Total Sales Tax
+    ：
+    $
+    0.00
+
+    Total Late Charges
+
+    $ 0.00
+
+    Patients-Crdt Crd
+
+    ： $ 300.00
+
+    $
+
+    0.00
+
+    Payer Payments
+
+    Total Charges
+
+    $ 300.00
+
+    ## GEO Chiropractic Clinic
+  question: |+
+    # Chain of Thought Analysis for Medical Claim unknown_claim
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim unknown_claim. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim unknown_claim
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    _IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3. Show your thoughts/work for each step before creating the final output JSON._
+
+  answer: |-
+    ## Step 1: Identify Claim Header Information
+    The total amount of the claim is $300.00, which is the sum of all payments received.
+
+    ## Step 2: Identify Diagnosis Codes
+    The diagnosis codes mentioned in the content are:
+    - M54.12: Cervical Radiculopathy
+    - M50.320: Other cervical disc degeneration, mid-cervical region
+    - S43.421A: Sprain of right rotator cuff capsule, initial encounter
+
+    ## Step 3: Count and Identify All Line Items
+    There are 4 distinct service line items in the claim:
+
+    1. 05/30/2023 - 98941 Chiropractic Manipulation - $80.00
+    2. 05/31/2023 - 98941 Chiropractic Manipulation - $80.00
+    3. 05/31/2023 - E0943 Pillowise - $140.00
+    4. 05/31/2023 - Credit card payment applied to unbilled services - $300.00
+
+    ## Step 4: Extract Provider Information
+    - Provider Tax ID: 95-3981045
+    - Provider Name: Eugene Orlowsky D.C.
+    - Billing Provider's NPI: 1477639169
+    - Billing Provider's Street Address: 2646 Mission Street
+    - Billing Provider's City: San Marino
+    - Billing Provider's State Code: CA
+    - Billing Provider's Zip Code: 91108
+    - Rendering Provider's Name (same as billing): Eugene Orlowsky D.C.
+    - Ordering Provider's Name: Not explicitly mentioned in the provided content
+
+    ## Step 5: Generate Final JSON Output
+
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": "300.00"
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "M54.12"
+            }
+          },
+          {
+            "diagnosisCode": {
+              "value": "M50.320"
+            }
+          },
+          {
+            "diagnosisCode": {
+              "value": "S43.421A"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "1" },
+          "fromDate": { "value": "05/30/2023" },
+          "toDate": { "value": "05/30/2023" },
+          "prcdrCd": { "value": "98941" },
+          "billAmt": { "value": "80.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "2" },
+          "fromDate": { "value": "05/31/2023" },
+          "toDate": { "value": "05/31/2023" },
+          "prcdrCd": { "value": "98941" },
+          "billAmt": { "value": "80.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "3" },
+          "fromDate": { "value": "05/31/2023" },
+          "toDate": { "value": "05/31/2023" },
+          "prcdrCd": { "value": "E0943" },
+          "billAmt": { "value": "140.00" },
+          "unitOfOccurance": { "value": "1" }
+        },
+        {
+          "lineNo": { "value": "4" },
+          "fromDate": { "value": "05/31/2023" },
+          "toDate": { "value": "05/31/2023" },
+          "billAmt": { "value": "300.00" },
+          "unitOfOccurance": { "value": "1" }
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "95-3981045" },
+        "provNm": { "value": "Eugene Orlowsky D.C." },
+        "billProvNPI": { "value": "1477639169" },
+        "billProvStAddr": { "value": "2646 Mission Street" },
+        "billProvCity": { "value": "San Marino" },
+        "billProvStCode": { "value": "CA" },
+        "billProvZipCode": { "value": "91108" },
+        "renderProvNm": { "value": "Eugene Orlowsky D.C." }
+      },
+      "statementClaimCode": "unknown_claim"
+    }
+    ```
+- context: |-
+    ## Open Doors Counseling Center
+
+    <!- image ->
+
+    ## Superbill
+
+    Date:18 October 2024
+
+    InvoiceNo.:19509
+
+    For Questions Call: 4079003218
+
+    Open Doors Counseling Center 530 Dog Track Rd Longwood FL 32750
+
+    Previous Balance:
+
+    $0.00
+
+    | Date | Service | Place of Service | Units | Charge |
+    |-|-|-|-|-|
+    | 10/18/2024 | 90837:IndividualSession RM | 11 | 1 | $115.00 |
+    | | | | Total Charges: | $115.00 |
+
+    Diagnostic Code(s): F90.0
+
+    Total Paid:$
+
+    $115.00
+
+    $0.00
+
+    Invoice Amount Due: $
+
+    Balance Due: $0.00
+
+    Client:
+
+    Name: Luke Jenson Date ofBirth:1December 2008 Sex: Male Phone: (407)718-7955
+
+    Billing Provider:
+
+    Name: Open Doors
+
+    Counseling Center
+
+    NPI#:1801148648
+
+    Taxld: 90-0796748
+
+    Ryan May
+
+    Rendering Provider:
+
+    Footnote:
+  question: |+
+    # Chain of Thought Analysis for Medical Claim 19509
+
+    ## Your Task:
+    Analyze the medical claim content above and extract the required information for claim 19509. Follow these specific steps:
+
+    ### Step 1: Identify Claim Header Information
+    - Look for the total amount of the claim
+    - Extract the exact numeric value if present
+
+    ### Step 2: Identify Diagnosis Codes
+    - Find all diagnosis codes mentioned in the content
+    - These typically follow ICD-10 format
+    - Extract each code exactly as written
+
+    ### Step 3: Count and Identify All Line Items
+    - Identify all service line items pertaining to claim 19509
+    - Only count rows with specific dates, procedure codes, and service units
+    - Exclude any summary rows (like "Total Fees" or "Total Paid")
+    - True service line items have: date of service, procedure/CPT code, and units
+    - Count total distinct service line items
+    - List each line item in sequence (1, 2, 3, etc.)
+    - Note any original line identifiers in the document
+
+    ### Step 4: Extract Provider Information
+    - Identify the provider's tax ID
+    - Extract the provider's name
+    - Find the billing provider's NPI number
+    - Extract the billing provider's street address
+    - Find the billing provider's city
+    - Extract the billing provider's state code
+    - Find the billing provider's zip code
+    - Extract the rendering provider's name (if different)
+    - Find the rendering provider's NPI number
+    - Extract the rendering provider's state code
+    - Find the rendering provider's zip code
+    - Extract the ordering provider's name
+    - Find the ordering provider's NPI number
+    - Extract the ordering provider's state code
+    - Find the ordering provider's zip code
+
+    ### Step 5: Generate Final JSON Output
+    Based on all previous analysis, create a JSON object with this structure:
+     
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": ""
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": ""
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "" },
+          "fromDate": { "value": "" },
+          "toDate": { "value": "" },
+          "posCode": { "value": "" },
+          "prcdrCd": { "value": "" },
+          "nationalDrugCode": { "value": "" },
+          "mdfrCd": { "value": "" },
+          "diagPntr": { "value": "" },
+          "billAmt": { "value": "" },
+          "unitOfOccurance": { "value": "" },
+          "covidBrand": { "value": "" }
+        }
+        /* repeat an object like this for each service line */
+      ],
+      "providerData": {
+        "provTaxID": { "value": "" },
+        "provNm": { "value": "" },
+        "billProvNPI": { "value": "" },
+        "billProvStAddr": { "value": "" },
+        "billProvCity": { "value": "" },
+        "billProvStCode": { "value": "" },
+        "billProvZipCode": { "value": "" },
+        "renderProvNm": { "value": "" },
+        "renderProvNPI": { "value": "" },
+        "renderProvStCd": { "value": "" },
+        "renderProvZipCd": { "value": "" },
+        "orderingProvNm": { "value": "" },
+        "orderingProvNPI": { "value": "" },
+        "orderingProvStCode": { "value": "" },
+        "orderingProvZipCode": { "value": "" }
+      },
+      "statementClaimCode": ""
+    }
+    ```
+
+    IMPORTANT: Make sure you include ALL line items you identified in Step 3 in your final JSON output. There should be exactly the same number of objects in the "claimLine" array as the number of line items you counted in Step 3.
+
+  answer: |-
+    ## Chain of Thought Analysis for Medical Claim 19509
+
+    ### Step 1: Identify Claim Header Information
+    - Total Amount: $115.00
+
+    ### Step 2: Identify Diagnosis Codes
+    - Diagnosis Code: F90.0
+
+    ### Step 3: Count and Identify All Line Items
+    - Line Item 1:
+      - Line No: 1
+      - From Date: 10/18/2024
+      - To Date: Not Applicable
+      - Place of Service: 11 (Individual Session)
+      - Procedure Code (CPT): 90837
+      - Units: 1
+      - Charge: $115.00
+
+    ### Step 4: Extract Provider Information
+    - Provider Tax ID: 90-0796748
+    - Billing Provider Name: Open Doors Counseling Center
+    - Billing Provider NPI: 1801148648
+    - Billing Provider Street Address: 530 Dog Track Rd
+    - Billing Provider City: Longwood
+    - Billing Provider State Code: FL
+    - Billing Provider Zip Code: 32750
+    - Rendering Provider Name: Not explicitly mentioned, presumed to be the same as Billing Provider
+    - Rendering Provider NPI: 1801148648
+    - Rendering Provider State Code: FL
+    - Rendering Provider Zip Code: 32750
+    - Ordering Provider Name: Not explicitly mentioned, presumed to be the same as Billing Provider
+    - Ordering Provider NPI: 1801148648
+    - Ordering Provider State Code: FL
+    - Ordering Provider Zip Code: 32750
+
+    ### Step 5: Generate Final JSON Output
+
+    ```json
+    {
+      "claimHeader": {
+        "totAmt": {
+          "value": "115.00"
+        }
+      },
+      "diagnosisArea": {
+        "diagnosisCodes": [
+          {
+            "diagnosisCode": {
+              "value": "F90.0"
+            }
+          }
+        ]
+      },
+      "claimLine": [
+        {
+          "lineNo": { "value": "1" },
+          "fromDate": { "value": "10/18/2024" },
+          "toDate": { "value": "10/18/2024" },
+          "posCode": { "value": "11" },
+          "prcdrCd": { "value": "90837" },
+          "diagPntr": { "value": "1" },
+          "billAmt": { "value": "115.00" },
+          "unitOfOccurance": { "value": "1" },
+        }
+      ],
+      "providerData": {
+        "provTaxID": { "value": "90-0796748" },
+        "provNm": { "value": "Open Doors Counseling Center" },
+        "billProvNPI": { "value": "1801148648" },
+        "billProvStAddr": { "value": "530 Dog Track Rd" },
+        "billProvCity": { "value": "Longwood" },
+        "billProvStCode": { "value": "FL" },
+        "billProvZipCode": { "value": "32750" },
+        "renderProvNm": { "value": "Open Doors Counseling Center" },
+        "renderProvNPI": { "value": "1801148648" },
+        "renderProvStCd": { "value": "FL" },
+        "renderProvZipCd": { "value": "32750" },
+        "orderingProvNm": { "value": "Open Doors Counseling Center" },
+        "orderingProvNPI": { "value": "1801148648" },
+        "orderingProvStCode": { "value": "FL" },
+        "orderingProvZipCode": { "value": "32750" }
+      },
+      "statementClaimCode": "19509"
+    }
+    ```
